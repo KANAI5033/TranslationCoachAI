@@ -179,7 +179,7 @@ export default function StudyPage() {
       // 计算改进分数
       const fixedErrors = analysisResults.filter(error => error.isFixed).length;
       const totalErrors = analysisResults.length;
-      const improvementScore = Math.round((fixedErrors / totalErrors) * 100);
+      const improvementScore = totalErrors > 0 ? Math.round((fixedErrors / totalErrors) * 100) : 100;
       
       // 更新学习进度
       const updatedProgress = [...learningProgress];
@@ -370,7 +370,7 @@ export default function StudyPage() {
                       <textarea
                         value={improvedTranslation}
                         onChange={(e) => setImprovedTranslation(e.target.value)}
-                        className="w-full h-48 p-4 border-2 border-green-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition duration-200 resize-none"
+                        className="w-full h-48 p-4 border-2 border-green-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition duration-200 resize-none text-gray-800"
                         placeholder="请根据建议修改您的翻译..."
                         defaultValue={studentTranslation}
                       />
