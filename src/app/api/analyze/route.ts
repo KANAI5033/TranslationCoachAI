@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Vercel 函数最大执行时间（秒），Hobby 计划最高 60s
+export const maxDuration = 30;
+
 // AI 分析结果的类型定义
 interface AIAnalysisItem {
   errorType: 'VocabularyError' | 'GrammarError' | 'Chinglish' | 'StyleError';
@@ -212,7 +215,7 @@ export async function POST(request: NextRequest) {
             max_tokens: 2000,
             temperature: 0.3,
           }),
-          signal: AbortSignal.timeout(30000),
+          signal: AbortSignal.timeout(25000),
         }
       );
 
