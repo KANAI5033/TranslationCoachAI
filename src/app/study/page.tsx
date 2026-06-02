@@ -75,28 +75,42 @@ export default function StudyPage() {
     }
   ];
 
+  // AI 分析状态
+  const [aiPowered, setAiPowered] = useState<boolean>(false);
+  const [aiMessage, setAiMessage] = useState<string>('');
+  const [overallScore, setOverallScore] = useState<number>(0);
+
   // 步骤1: 分析错误
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
-    
+    setAiPowered(false);
+    setAiMessage('');
+
     try {
-      // 调用AI分析服务
+      // 调用AI分析服务（通过服务端 API 路由）
       const result = await analyzeTranslation(chineseOriginal, studentTranslation);
-      
+
+      // 记录 AI 状态
+      setAiPowered(result.aiPowered || false);
+      setAiMessage(result.message || '');
+      setOverallScore(result.overallScore);
+
       // 将AI分析结果转换为ErrorFeedback格式
-      const errors: ErrorFeedback[] = result.analyses.map(analysis => ({
-        type: analysis.errorType as ErrorType,
-        title: getErrorTitle(analysis.errorType),
-        description: analysis.explanation,
-        example: analysis.example || analysis.explanation,
-        suggestion: analysis.suggestion,
-        severity: analysis.severity,
-        isFixed: false
-      }));
-      
+      const errors: ErrorFeedback[] = result.analyses.length > 0
+        ? result.analyses.map(analysis => ({
+            type: analysis.errorType as ErrorType,
+            title: getErrorTitle(analysis.errorType),
+            description: analysis.explanation,
+            example: analysis.example || analysis.explanation,
+            suggestion: analysis.suggestion,
+            severity: analysis.severity,
+            isFixed: false
+          }))
+        : [];
+
       setAnalysisResults(errors);
       setCurrentStep('analysis');
-      
+
       // 记录第一次尝试
       const progress: LearningProgress = {
         originalText: chineseOriginal,
@@ -107,6 +121,9 @@ export default function StudyPage() {
       setLearningProgress([...learningProgress, progress]);
     } catch (error) {
       console.error('AI分析失败:', error);
+      setAiPowered(false);
+      setAiMessage('AI 服务暂时不可用，使用示例分析');
+
       // 如果AI分析失败，使用模拟数据
       const errors = mockErrorData.map(error => ({
         ...error,
@@ -114,7 +131,7 @@ export default function StudyPage() {
       }));
       setAnalysisResults(errors);
       setCurrentStep('analysis');
-      
+
       const progress: LearningProgress = {
         originalText: chineseOriginal,
         firstAttempt: studentTranslation,
@@ -301,6 +318,37 @@ export default function StudyPage() {
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg p-6">
                   <h2 className="text-xl font-bold text-gray-900 mb-4">步骤2: 错误分析结果</h2>
+
+                  {/* AI 状态指示器 */}
+                  <div className={`mb-4 p-3 rounded-xl flex items-center gap-2 ${
+                    aiPowered
+                      ? 'bg-green-50 border border-green-200'
+                      : 'bg-yellow-50 border border-yellow-200'
+                  }`}>
+                    <span className="text-lg">{aiPowered ? '🤖' : '📋'}</span>
+                    <div>
+                      <span className={`text-sm font-medium ${
+                        aiPowered ? 'text-green-700' : 'text-yellow-700'
+                      }`}>
+                        {aiPowered ? 'AI 智能分析' : '规则引擎分析'}
+                      </span>
+                      {aiMessage && (
+                        <span className="text-xs text-gray-500 ml-2">({aiMessage})</span>
+                      )}
+                    </div>
+                    {overallScore > 0 && (
+                      <span className="ml-auto text-lg font-bold text-blue-600">
+                        评分: {overallScore}/100
+                      </span>
+                    )}
+                  </div>
+
+                  {analysisResults.length === 0 ? (
+                    <div className="p-6 text-center bg-green-50 rounded-xl border border-green-200">
+                      <span className="text-2xl">🎉</span>
+                      <p className="text-green-700 font-medium mt-2">没有发现错误，翻译得很好！</p>
+                    </div>
+                  ) : (
                   <div className="space-y-4">
                     {analysisResults.map((error, index) => (
                       <div key={index} className={`border-l-4 ${getErrorTypeColor(error.type)} p-4 rounded-r-xl`}>
@@ -334,7 +382,8 @@ export default function StudyPage() {
                       </div>
                     ))}
                   </div>
-                  
+                  )}
+
                   <div className="mt-6 p-4 bg-blue-50 rounded-xl">
                     <h3 className="font-bold text-blue-900 mb-2">💡 下一步</h3>
                     <p className="text-blue-800 mb-3">
