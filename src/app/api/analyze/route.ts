@@ -244,37 +244,53 @@ export async function POST(request: NextRequest) {
         throw new Error('No analysis content received from AI');
       }
 
-      // 尝试解析 AI 返回的 JSON
+      // 尝试解析 AI 返回的 JSON（增强版：处理各种格式）
       let parsedAnalysis: AIAnalysisResult;
       try {
-        // 提取 JSON（AI 可能返回了额外的文字）
-        const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const aiResult = JSON.parse(jsonMatch[0]);
-          parsedAnalysis = {
-            analyses: Array.isArray(aiResult.analyses)
-              ? aiResult.analyses.map((a: any) => ({
-                  errorType: validateErrorType(a.errorType),
-                  explanation: a.explanation || '',
-                  suggestion: a.suggestion || '',
-                  example: a.example || '',
-                  severity: validateSeverity(a.severity),
-                }))
-              : [],
-            overallScore:
-              typeof aiResult.overallScore === 'number'
-                ? Math.max(0, Math.min(100, aiResult.overallScore))
-                : 85,
-            suggestedExercises: Array.isArray(aiResult.suggestedExercises)
-              ? aiResult.suggestedExercises
-              : [],
-            rawResponse: analysisText,
-          };
-        } else {
+        // 1. 先去掉 markdown 代码块标记
+        let cleanText = analysisText
+          .replace(/```json\s*/gi, '')
+          .replace(/```\s*/g, '')
+          .trim();
+
+        // 2. 尝试提取 JSON 对象
+        let jsonStr: string | null = null;
+        const jsonObjMatch = cleanText.match(/\{[\s\S]*\}/);
+        if (jsonObjMatch) {
+          jsonStr = jsonObjMatch[0];
+        }
+
+        if (!jsonStr) {
           throw new Error('No JSON found in AI response');
         }
+
+        const aiResult = JSON.parse(jsonStr);
+        parsedAnalysis = {
+          analyses: Array.isArray(aiResult.analyses)
+            ? aiResult.analyses.map((a: any) => ({
+                errorType: validateErrorType(a.errorType),
+                explanation: a.explanation || '',
+                suggestion: a.suggestion || '',
+                example: a.example || '',
+                severity: validateSeverity(a.severity),
+              }))
+            : [],
+          overallScore:
+            typeof aiResult.overallScore === 'number'
+              ? Math.max(0, Math.min(100, aiResult.overallScore))
+              : 85,
+          suggestedExercises: Array.isArray(aiResult.suggestedExercises)
+            ? aiResult.suggestedExercises
+            : [],
+          rawResponse: analysisText,
+        };
       } catch (parseError) {
-        console.error('Failed to parse AI response as JSON:', parseError);
+        console.error(
+          'Failed to parse AI response as JSON:',
+          parseError,
+          'Raw response:',
+          analysisText?.substring(0, 300)
+        );
         // JSON 解析失败，回退到规则分析
         const result = fallbackAnalysis(chineseText, studentTranslation);
         return NextResponse.json({
