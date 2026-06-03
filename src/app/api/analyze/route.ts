@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
             'X-Title': 'Translation Coach AI',
           },
           body: JSON.stringify({
-            model: 'google/gemma-4-31b-it:free',
+            model: 'openrouter/free',
             messages: [
               {
                 role: 'system',
