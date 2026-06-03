@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Vercel 函数最大执行时间（秒），Hobby 计划最高 60s
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 // AI 分析结果的类型定义
 interface AIAnalysisItem {
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
             'X-Title': 'Translation Coach AI',
           },
           body: JSON.stringify({
-            model: 'z-ai/glm-4.5-air:free',
+            model: 'google/gemma-4-31b-it:free',
             messages: [
               {
                 role: 'system',
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
 请严格按照 JSON 格式返回结果，不要包含任何其他内容。`,
               },
             ],
-            max_tokens: 2000,
+            max_tokens: 600,
             temperature: 0.3,
           }),
           signal: AbortSignal.timeout(25000),
