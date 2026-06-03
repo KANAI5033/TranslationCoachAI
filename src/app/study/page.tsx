@@ -489,18 +489,18 @@ export default function StudyPage() {
                       
                       <div className="p-4 bg-blue-50 rounded-xl">
                         <h4 className="font-bold text-blue-900 mb-2">学习总结</h4>
-                        <ul className="space-y-2">
+                        <ul className="space-y-2 text-gray-800">
                           <li className="flex items-center">
                             <span className="text-green-600 mr-2">✓</span>
-                            <span>发现了 {analysisResults.length} 个错误类型</span>
+                            <span className="text-gray-800">发现了 {analysisResults.length} 个错误类型</span>
                           </li>
                           <li className="flex items-center">
                             <span className="text-green-600 mr-2">✓</span>
-                            <span>应用了 {analysisResults.filter(e => e.isFixed).length} 个改进建议</span>
+                            <span className="text-gray-800">应用了 {analysisResults.filter(e => e.isFixed).length} 个改进建议</span>
                           </li>
                           <li className="flex items-center">
                             <span className="text-green-600 mr-2">✓</span>
-                            <span>翻译质量提升了 {learningProgress[learningProgress.length - 1].improvementScore}%</span>
+                            <span className="text-gray-800">翻译质量提升了 {learningProgress[learningProgress.length - 1].improvementScore}%</span>
                           </li>
                         </ul>
                       </div>
